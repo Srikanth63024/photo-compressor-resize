@@ -18,22 +18,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Setup Gradle Cache
-        uses: actions/setup-gradle@v3
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Build Release APK and Release AAB
+      - name: Build Installable APK and Play Store AAB
         run: |
-          ./gradlew assembleRelease bundleRelease --stacktrace
+          ./gradlew assembleDebug bundleRelease --stacktrace
 
-      - name: Upload Installable Release APK
+      - name: Upload Installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
 
       - name: Upload Play Store AAB Bundle
