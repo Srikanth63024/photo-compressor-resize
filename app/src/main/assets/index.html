@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="no-referrer">
+  <title>Photo Compressor & Resize</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind Theme Configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#F0F7FF',
+              100: '#E0EFFF',
+              200: '#B9DDFF',
+              400: '#389BFF',
+              500: '#0D82FE',
+              600: '#0066FE',
+              700: '#0052CC',
+              dark: '#2684FF'
+            },
+            surface: {
+              light: '#FFFFFF',
+              'light-bg': '#F6F8FA',
+              'light-card': '#FFFFFF',
+              'light-border': '#EAECEF',
+              'light-text': '#111827',
+              'light-muted': '#6B7280',
+              'light-dim': '#F3F4F6',
+              
+              dark: '#121417',
+              'dark-bg': '#0B0D0F',
+              'dark-card': '#181B1F',
+              'dark-border': '#262930',
+              'dark-text': '#F3F4F6',
+              'dark-muted': '#9CA3AF',
+              'dark-dim': '#20242B'
+            }
+          },
+          borderRadius: {
+            'ctrl': '12px',
+            'card': '16px',
+            'hero': '20px',
+            'pill': '9999px'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .btn-press {
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-press:active:not(:disabled) {
+      transform: scale(0.975);
+      opacity: 0.9;
+    }
+    .btn-press:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .screen-view {
+      animation: screenFadeIn 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: opacity, transform;
+    }
+    @keyframes screenFadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ad-banner-wrapper.collapsed {
+      max-height: 0 !important;
+      opacity: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #splash-screen {
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+      will-change: opacity;
+    }
+    #splash-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="bg-surface-light-bg dark:bg-surface-dark-bg text-surface-light-text dark:text-surface-dark-text font-sans antialiased selection:bg-brand-500 selection:text-white transition-colors duration-150">
+
+  <!-- SPLASH SCREEN -->
+  <div id="splash-screen" class="fixed inset-0 z-50 bg-white dark:bg-surface-dark-bg flex flex-col items-center justify-center p-6 select-none">
+    <div class="flex flex-col items-center space-y-4">
+      <div class="w-24 h-24 rounded-[22px] bg-gradient-to-br from-[#1A8CFF] to-[#0062E0] flex items-center justify-center shadow-lg shadow-brand-500/25 relative overflow-hidden">
+        <svg class="w-16 h-16 text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 34V22H34M22 22L35 35" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M78 34V22H66M78 22L65 35" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 66V78H34M22 78L35 65" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M78 66V78H66M78 78L65 65" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="29" y="29" width="42" height="42" rx="7" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+          <circle cx="60" cy="40" r="3.5" fill="currentColor"/>
+          <path d="M33 63L45 49L53 58L60 50L67 58" stroke="currentColor" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="text-center space-y-1">
+        <h1 class="text-lg font-bold tracking-tight text-surface-light-text dark:text-surface-dark-text">Photo Compressor & Resize</h1>
+        <p class="text-xs text-surface-light-muted dark:text-surface-dark-muted font-normal">Make any photo the size you need.</p>
+      </div>
+    </div>
+    <div class="absolute bottom-3 w-32 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700"></div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <div id="app-viewport" class="max-w-[440px] mx-auto min-h-screen flex flex-col bg-surface-light dark:bg-surface-dark border-x border-surface-light-border dark:border-surface-dark-border relative shadow-lg overflow-x-hidden">
+
+    <!-- Top Bar -->
+    <header id="top-bar" class="sticky top-0 z-40 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur border-b border-surface-light-border dark:border-surface-dark-border px-4 py-2.5 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <button id="btn-back" class="hidden w-9 h-9 rounded-full flex items-center justify-center text-surface-light-text dark:text-surface-dark-text hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim btn-press" aria-label="Go back">
+          <i class="fa-solid fa-arrow-left text-sm"></i>
+        </button>
+        <h1 id="screen-title" class="text-base font-bold text-surface-light-text dark:text-surface-dark-text tracking-tight truncate max-w-[220px]">Photo Compressor & Resize</h1>
+        <span id="badge-pro-header" class="hidden px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-dark font-mono text-[10px] font-bold">PRO</span>
+      </div>
+      <div class="flex items-center space-x-1">
+        <button id="btn-toggle-theme" class="w-9 h-9 rounded-full flex items-center justify-center text-surface-light-muted dark:text-surface-dark-muted hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim btn-press" aria-label="Toggle Theme">
+          <i class="fa-regular fa-moon dark:hidden text-sm"></i>
+          <i class="fa-regular fa-sun hidden dark:inline text-sm"></i>
+        </button>
+        <button id="btn-open-settings" class="w-9 h-9 rounded-full flex items-center justify-center text-surface-light-muted dark:text-surface-dark-muted hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim btn-press" aria-label="Settings">
+          <i class="fa-solid fa-gear text-sm"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Screens -->
+    <main class="flex-1 flex flex-col relative overflow-y-auto no-scrollbar">
+
+      <!-- SCREEN 1: HOME -->
+      <section id="screen-home" class="screen-view p-4 space-y-4 flex-1 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex flex-col items-center text-center pt-1 pb-1 space-y-2">
+            <div class="w-16 h-16 rounded-[18px] bg-gradient-to-br from-[#1A8CFF] to-[#0062E0] flex items-center justify-center shadow-md shadow-brand-500/20">
+              <svg class="w-11 h-11 text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 34V22H34M22 22L35 35" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M78 34V22H66M78 22L65 35" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 66V78H34M22 78L35 65" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M78 66V78H66M78 78L65 65" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="29" y="29" width="42" height="42" rx="7" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                <circle cx="60" cy="40" r="3.5" fill="currentColor"/>
+                <path d="M33 63L45 49L53 58L60 50L67 58" stroke="currentColor" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="space-y-1">
+              <h2 class="text-lg font-bold text-surface-light-text dark:text-surface-dark-text tracking-tight">Photo Compressor & Resize</h2>
+              <p class="text-[12px] text-surface-light-muted dark:text-surface-dark-muted max-w-xs leading-snug">
+                Make any photo the size you need. Compress photos to an exact KB or resize them in seconds.
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-2.5">
+            <button id="btn-hero-select" class="btn-press w-full py-3.5 px-4 rounded-ctrl bg-[#0D82FE] hover:bg-[#0070E0] active:bg-[#0062E0] text-white font-semibold text-sm flex items-center justify-center space-x-2 shadow-sm">
+              <i class="fa-regular fa-image text-base"></i>
+              <span>Select Photo</span>
+            </button>
+            <button id="btn-quick-camera" class="btn-press w-full py-3 px-4 rounded-ctrl bg-surface-light dark:bg-surface-dark border border-brand-500/40 dark:border-brand-500/40 text-[#0D82FE] dark:text-brand-dark font-semibold text-sm flex items-center justify-center space-x-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10">
+              <i class="fa-solid fa-camera text-base"></i>
+              <span>Camera</span>
+            </button>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <button id="tool-exact-mode" class="btn-press w-full p-3.5 rounded-card border border-surface-light-border dark:border-surface-dark-border bg-surface-light dark:bg-surface-dark hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim flex items-center justify-between text-left shadow-2xs">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-sm shadow-xs">
+                  <i class="fa-solid fa-chart-area"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-surface-light-text dark:text-surface-dark-text">Compress to Exact Size</div>
+                  <div class="text-[11px] text-surface-light-muted dark:text-surface-dark-muted">Make your photo a specific size (e.g. 100 KB).</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-xs text-surface-light-muted"></i>
+            </button>
+
+            <button id="tool-resize-mode" class="btn-press w-full p-3.5 rounded-card border border-surface-light-border dark:border-surface-dark-border bg-surface-light dark:bg-surface-dark hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim flex items-center justify-between text-left shadow-2xs">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white flex items-center justify-center text-sm shadow-xs">
+                  <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-surface-light-text dark:text-surface-dark-text">Resize Photo</div>
+                  <div class="text-[11px] text-surface-light-muted dark:text-surface-dark-muted">Change dimensions (e.g. 1920 × 1080).</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-xs text-surface-light-muted"></i>
+            </button>
+
+            <button id="tool-batch-mode" class="btn-press w-full p-3.5 rounded-card border border-surface-light-border dark:border-surface-dark-border bg-surface-light dark:bg-surface-dark hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim flex items-center justify-between text-left shadow-2xs">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-sm shadow-xs">
+                  <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-surface-light-text dark:text-surface-dark-text">Batch Compress</div>
+                  <div class="text-[11px] text-surface-light-muted dark:text-surface-dark-muted">Process multiple photos together.</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-xs text-surface-light-muted"></i>
+            </button>
+
+            <button id="tool-history-mode" class="btn-press w-full p-3.5 rounded-card border border-surface-light-border dark:border-surface-dark-border bg-surface-light dark:bg-surface-dark hover:bg-surface-light-dim dark:hover:bg-surface-dark-dim flex items-center justify-between text-left shadow-2xs">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-brand-600 text-white flex items-center justify-center text-sm shadow-xs">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-surface-light-text dark:text-surface-dark-text">History</div>
+                  <div class="text-[11px] text-surface-light-muted dark:text-surface-dark-muted">View your previous operations.</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-xs text-surface-light-muted"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: EXACT SIZE -->
+      <section id="screen-exact" class="screen-view hidden p-4 space-y-4 flex-1 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="relative w-full h-48 rounded-card overflow-hidden bg-black/5 dark:bg-white/5 border border-surface-light-border dark:border-surface-dark-border flex items-center justify-center">
+            <img id="exact-preview-img" src="" alt="Selected Photo" class="max-w-full max-h-full object-contain">
+            <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-mono">
+              <span id="exact-preview-info">1920 × 1280 • 5.8 MB</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-surface-light-text dark:text-surface-dark-text">Target Size (Approximate)</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button class="btn-exact-chip py-2 rounded-ctrl border border-surface-light-border dark:border-surface-dark-border text-xs font-semibold text-center btn-press" data-kb="50">50 KB</button>
+              <button class="btn-exact-chip py-2 rounded-ctrl bg-[#0D82FE] text-white text-xs font-semibold text-center btn-press shadow-xs" data-kb="100">100 KB</button>
+              <button class="btn-exact-chip py-2 rounded-ctrl border border-surface-light-border dark:border-surface-dark-border text-xs font-semibold text-center btn-press" data-kb="200">200 KB</button>
+              <button class="btn-exact-chip py-2 rounded-ctrl border border-surface-light-border dark:border-surface-dark-border text-xs font-semibold text-center btn-press" data-kb="500">500 KB</button>
+              <button class="btn-exact-chip py-2 rounded-ctrl border border-surface-light-border dark:border-surface-dark-border text-xs font-semibold text-center btn-press" data-kb="1024">1 MB</button>
+              <button class="btn-exact-chip py-2 rounded-ctrl border border-surface-light-border dark:border-surface-dark-border text-xs font-semibold text-center btn-press" data-kb="custom">Custom</button>
+            </div>
+            
+            <div id="exact-custom-input-box" class="hidden pt-1 flex items-center space-x-2">
+              <input id="input-exact-custom-val" type="number" min="10" max="25000" placeholder="e.g. 150" class="flex-1 px-3 py-2 rounded-ctrl border border-surface-light-border dark:border-surface-dark-border bg-surface-light dark:bg-surface-dark text-xs font-mono focus:outline-none focus:border-brand-500">
+              <span class="text-xs font-bold text-surface-light-muted">KB</span>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-surface-light-text dark:text-surface-dark-text">Compress Quality</span>
+              <span id="label-exact-quality" class="font-bold font-mono text-[#0D82FE]">80%</span>
+            </div>
+            <input id="slider-exact-quality" type="range" min="20" max="98" value="80" class="w-full h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-[#0D82FE]">
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-card bg-surface-light-dim dark:bg-surface-dark-dim border border-surface-light-border dark:border-surface-dark-border">
+            <div>
+              <div class="text-xs font-semibold text-surface-light-text dark:text-surface-dark-text">Maintain aspect ratio</div>
+              <div class="text-[11px] text-surface-light-muted dark:text-surface-dark-muted">Recommended for best results</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="toggle-exact-aspect" type="checkbox" checked class="sr-only peer">
+              <div class="w-10 h-6 bg-neutral-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0D82FE]"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-4 space-y-2">
+          <button id="btn-do-compress-exact" class="btn-press w-full py-3.5 rounded-ctrl bg-[#0D82FE] hover:bg-[#0070E0] text-white font-semibold text-sm shadow-sm flex items-center justify-center space-x-2">
+            <span>Compress Photo</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: RESIZE -->
+      <section id="screen-resize" class="screen-view hidden p-4 space-y-4 flex-1 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="relative w-full h-48 rounded-card overflow-hidden bg-black/5 dark:bg-white/5 border border-surface-light-border dark:border-surface-dark-border flex items-center justify-center">
+            <img id="resize-preview-img" src="" alt="Selected Photo" class="max-w-full max-h-full object-contain">
+            <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-mono">
+              <span id="resize-preview-info">1920 × 1280 • 5.8 MB</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-surface-light-text dark:text-surface-dark-text">Dimensions</label>
+            <div class="flex items-center space-x-2">
+             
