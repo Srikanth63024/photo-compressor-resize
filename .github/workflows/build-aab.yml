@@ -24,11 +24,11 @@ run: gradle assembleDebug bundleRelease --stacktrace
 uses: actions/upload-artifact@v4
 with:
 name: app-debug-apk
-path: app/build/outputs/apk/debug/*.apk
+path: app/build/outputs/apk/debug/.apk
 retention-days: 14
 - name: Upload Release AAB
 uses: actions/upload-artifact@v4
 with:
 name: app-release-aab
-path: app/build/outputs/bundle/release/*.aab
+path: app/build/outputs/bundle/release/.aab
 retention-days: 14
